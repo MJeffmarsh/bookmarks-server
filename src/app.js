@@ -5,6 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const { NODE_ENV } = require('./config');
 const bookmarkRouter = require('./bookmarks-router');
+const bookmarksService = require('./bookmarksService');
 
 const app = express();
 
@@ -15,6 +16,16 @@ app.use(helmet());
 app.use(cors());
 
 app.use(bookmarkRouter);
+
+app.get('/bookmarks', (req, res, next) => {
+  const knexInstance = req.app.get('db');
+  bookmarksService
+    .getAllBookmarks(knexInstance)
+    .then(bookmarks => {
+      res.json(bookmarks);
+    })
+    .catch(next);
+});
 
 app.use(function errorHandler(error, req, res, next) {
   let response;
