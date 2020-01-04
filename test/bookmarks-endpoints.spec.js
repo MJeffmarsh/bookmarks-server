@@ -1,5 +1,4 @@
 process.env.TZ = 'UTC';
-const { expect } = require('chai');
 const knex = require('knex');
 const app = require('../src/app');
 const { makeBookmarksArray } = require('./bookmark-fixtures');
@@ -15,23 +14,33 @@ describe.only('Bookmarks Endpoints', function() {
     app.set('db', db);
   });
 
+  before('clean the table', () => db('bookmarks').truncate());
+
+  afterEach('cleanup', () => db('bookmarks').truncate());
+
   after('disconnect from db', () => db.destroy());
 
-  before('clean the table', () => db('bookmarks_table').truncate());
+  describe('GET /bookmarks', () => {
+    context(`Given no bookmarks`, () => {
+      it(`responds with 200 and an empty list`, () => {
+        return supertest(app)
+          .get('/bookmarks')
+          .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
+          .expect(200, []);
+      });
+    });
 
-  afterEach('cleanup', () => db('bookmarks_table').truncate());
-
-  describe(`GET /bookmarks`, () => {
     context('Given there are bookmarks in the database', () => {
       const testBookmarks = makeBookmarksArray();
 
       beforeEach('insert bookmarks', () => {
-        return db.into('bookmarks_table').insert(testBookmarks);
+        return db.into('bookmarks').insert(testBookmarks);
       });
 
-      it('responds with 200 and all of the bookmarks', () => {
+      it('gets the bookmarks from the store', () => {
         return supertest(app)
           .get('/bookmarks')
+          .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
           .expect(200, testBookmarks);
       });
     });
@@ -42,7 +51,7 @@ describe.only('Bookmarks Endpoints', function() {
       const testBookmarks = makeBookmarksArray();
 
       beforeEach('insert bookmarks', () => {
-        return db.into('bookmarks_table').insert(testBookmarks);
+        return db.into('bookmarks').insert(testBookmarks);
       });
 
       it('responds with 200 and the specified bookmark', () => {
@@ -51,16 +60,6 @@ describe.only('Bookmarks Endpoints', function() {
         return supertest(app)
           .get(`/bookmarks/${bookmarkId}`)
           .expect(200, expectedBookmark);
-      });
-    });
-  });
-
-  describe(`GET /bookmarks`, () => {
-    context(`Given no bookmarks`, () => {
-      it(`responds with 200 and an empty list`, () => {
-        return supertest(app)
-          .get('/bookmarks')
-          .expect(200, []);
       });
     });
   });

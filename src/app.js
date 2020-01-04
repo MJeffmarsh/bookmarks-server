@@ -5,7 +5,6 @@ const cors = require('cors');
 const helmet = require('helmet');
 const { NODE_ENV } = require('./config');
 const bookmarkRouter = require('./bookmarks-router');
-const bookmarksService = require('./bookmarksService');
 
 const app = express();
 
@@ -21,8 +20,8 @@ app.get('/bookmarks', (req, res, next) => {
   const knexInstance = req.app.get('db');
   bookmarksService
     .getAllBookmarks(knexInstance)
-    .then(bookmarks => {
-      res.json(bookmarks);
+    .then(bookmark => {
+      res.json(bookmark);
     })
     .catch(next);
 });
@@ -37,7 +36,7 @@ app.get('/bookmarks/:bookmark_id', (req, res, next) => {
           error: { message: `Bookmark doesn't exist` }
         });
       }
-      res.json(bookamrk);
+      res.json(bookmark);
     })
     .catch(next);
 });

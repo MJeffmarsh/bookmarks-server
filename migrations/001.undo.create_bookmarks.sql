@@ -1,2 +1,2 @@
-DROP TABLE IF EXISTS bookmarks_table;
+DROP TABLE IF EXISTS bookmarks;
 DROP TYPE IF EXISTS star_rating;
