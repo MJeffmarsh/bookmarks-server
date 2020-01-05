@@ -63,4 +63,14 @@ describe.only('Bookmarks Endpoints', function() {
       });
     });
   });
+  describe(`GET /bookmarks/:bookmark_id`, () => {
+    context(`Given no bookmarks`, () => {
+      it(`responds with 404`, () => {
+        const bookmarkId = 123456;
+        return supertest(app)
+          .get(`/bookmarks/${bookmarkId}`)
+          .expect(404, { error: { message: `Bookmark doesn't exist` } });
+      });
+    });
+  });
 });
