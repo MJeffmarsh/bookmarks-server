@@ -3,7 +3,7 @@ const knex = require('knex');
 const app = require('../src/app');
 const { makeBookmarksArray } = require('./bookmark-fixtures');
 
-describe.only('Bookmarks Endpoints', function() {
+describe('Bookmarks Endpoints', function() {
   let db;
 
   before('make knex instance', () => {
@@ -20,7 +20,7 @@ describe.only('Bookmarks Endpoints', function() {
 
   after('disconnect from db', () => db.destroy());
 
-  describe('GET /bookmarks', () => {
+  describe.only('GET /bookmarks', () => {
     context(`Given no bookmarks`, () => {
       it(`responds with 200 and an empty list`, () => {
         return supertest(app)
@@ -37,11 +37,38 @@ describe.only('Bookmarks Endpoints', function() {
         return db.into('bookmarks').insert(testBookmarks);
       });
 
-      it('gets the bookmarks from the store', () => {
+      it('gets all bookmarks and responds with 200', () => {
         return supertest(app)
           .get('/bookmarks')
           .set('Authorization', `Bearer ${process.env.API_TOKEN}`)
           .expect(200, testBookmarks);
+      });
+    });
+    context(`Given an XSS attack bookmark`, () => {
+      const maliciousBookmark = {
+        id: 911,
+        title: 'Naughty naughty very naughty <script>alert("xss");</script>',
+        url: 'http://www.badwebsite.com',
+        rating: 3,
+        description: `Bad image <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.`
+      };
+
+      beforeEach('insert malicious bookmark', () => {
+        return db.into('bookmarks').insert([maliciousBookmark]);
+      });
+
+      it('removes XSS attack content', () => {
+        return supertest(app)
+          .get(`/bookmarks/${maliciousBookmark.id}`)
+          .expect(200)
+          .expect(res => {
+            expect(res.body.title).to.eql(
+              'Naughty naughty very naughty &lt;script&gt;alert("xss");&lt;/script&gt;'
+            );
+            expect(res.body.description).to.eql(
+              `Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.`
+            );
+          });
       });
     });
   });

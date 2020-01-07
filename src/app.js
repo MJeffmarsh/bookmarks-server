@@ -16,29 +16,8 @@ app.use(cors());
 
 app.use(bookmarkRouter);
 
-app.get('/bookmarks', (req, res, next) => {
-  const knexInstance = req.app.get('db');
-  bookmarksService
-    .getAllBookmarks(knexInstance)
-    .then(bookmark => {
-      res.json(bookmark);
-    })
-    .catch(next);
-});
-
-app.get('/bookmarks/:bookmark_id', (req, res, next) => {
-  const knexInstance = req.app.get('db');
-  bookmarksService
-    .getById(knexInstance, req.params.bookmark_id)
-    .then(bookmark => {
-      if (!bookmark) {
-        return res.status(404).json({
-          error: { message: `Bookmark doesn't exist` }
-        });
-      }
-      res.json(bookmark);
-    })
-    .catch(next);
+app.get('/', (req, res) => {
+  res.send('Hello, world!');
 });
 
 app.use(function errorHandler(error, req, res, next) {
