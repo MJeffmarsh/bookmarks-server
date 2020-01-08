@@ -128,7 +128,7 @@ describe('Bookmarks Endpoints', function() {
       });
     });
   });
-  describe.only(`POST /bookmarks`, () => {
+  describe(`POST /bookmarks`, () => {
     it(`creates a bookmark, responding with 201 and the new bookmark`, function() {
       const newBookmark = {
         title: 'Test new bookmark',
@@ -147,7 +147,6 @@ describe('Bookmarks Endpoints', function() {
           expect(res.body.description).to.eql(newBookmark.description);
           expect(res.body).to.have.property('id');
           expect(res.headers.location).to.eql(`/bookmarks/${res.body.id}`);
-          expect(actual).to.eql(expected);
         })
         .then(postRes =>
           supertest(app)
@@ -173,6 +172,60 @@ describe('Bookmarks Endpoints', function() {
           .expect(400, {
             error: { message: `Missing '${field}' in request body` }
           });
+      });
+    });
+
+    it('removes XSS attack rating', () => {
+      const maliciousBookmark = {
+        id: 911,
+        title: 'Naughty naughty very naughty <script>alert("xss");</script>',
+        url: 'http://www.badwebsite.com',
+        rating: '3',
+        description: `Bad image <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.`
+      };
+      return supertest(app)
+        .post(`/bookmarks`)
+        .send(maliciousBookmark)
+        .expect(201)
+        .expect(res => {
+          expect(res.body.title).to.eql(
+            'Naughty naughty very naughty &lt;script&gt;alert("xss");&lt;/script&gt;'
+          );
+          expect(res.body.description).to.eql(
+            `Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.`
+          );
+        });
+    });
+  });
+  describe(`DELETE /bookmarks/:bookmark_id`, () => {
+    context('Given there are bookmarks in the database', () => {
+      const testbookmarks = makeBookmarksArray();
+
+      beforeEach('insert bookmarks', () => {
+        return db.into('bookmarks').insert(testbookmarks);
+      });
+
+      it('responds with 204 and removes the bookmark', () => {
+        const idToRemove = 2;
+        const expectedbookmarks = testbookmarks.filter(
+          bookmark => bookmark.id !== idToRemove
+        );
+        return supertest(app)
+          .delete(`/bookmarks/${idToRemove}`)
+          .expect(204)
+          .then(res =>
+            supertest(app)
+              .get(`/bookmarks`)
+              .expect(expectedbookmarks)
+          );
+      });
+    });
+    context(`Given no bookmarks`, () => {
+      it(`responds with 404`, () => {
+        const bookmarkId = 123456;
+        return supertest(app)
+          .delete(`/bookmarks/${bookmarkId}`)
+          .expect(404, { error: { message: `Bookmark doesn't exist` } });
       });
     });
   });

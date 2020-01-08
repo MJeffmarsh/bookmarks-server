@@ -28,8 +28,8 @@ bookmarkRouter
       .catch(next);
   })
   .post(jsonParser, (req, res, next) => {
-    const { title, url, rating } = req.body;
-    const newBookmark = { title, url, rating };
+    const { title, url, rating, description } = req.body;
+    const newBookmark = { title, url, rating, description };
 
     for (const [key, value] of Object.entries(newBookmark)) {
       if (value == null) {
@@ -39,7 +39,7 @@ bookmarkRouter
       }
     }
 
-    if (!Number.isInteger(rating) || rating < 0 || rating > 5) {
+    if (!['1', '2', '3', '4', '5'].includes(rating)) {
       logger.error(`Invalid rating '${rating}' supplied`);
       return res.status(400).send(`'rating' must be a number between 0 and 5`);
     }
