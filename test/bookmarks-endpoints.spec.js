@@ -50,7 +50,7 @@ describe('Bookmarks Endpoints', function() {
         id: 911,
         title: 'Naughty naughty very naughty <script>alert("xss");</script>',
         url: 'http://www.badwebsite.com',
-        rating: 3,
+        rating: '3',
         description: `Bad image <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.`
       };
 
