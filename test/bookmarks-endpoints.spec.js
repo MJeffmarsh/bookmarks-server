@@ -130,7 +130,6 @@ describe('Bookmarks Endpoints', function() {
   });
   describe.only(`POST /bookmarks`, () => {
     it(`creates a bookmark, responding with 201 and the new bookmark`, function() {
-      this.retries(3);
       const newBookmark = {
         title: 'Test new bookmark',
         url: 'https://testsite.com',
