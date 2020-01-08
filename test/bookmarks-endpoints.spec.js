@@ -1,4 +1,5 @@
 process.env.TZ = 'UTC';
+const { expect } = require('chai');
 const knex = require('knex');
 const app = require('../src/app');
 const { makeBookmarksArray } = require('./bookmark-fixtures');
@@ -20,7 +21,7 @@ describe('Bookmarks Endpoints', function() {
 
   after('disconnect from db', () => db.destroy());
 
-  describe.only('GET /bookmarks', () => {
+  describe('GET /bookmarks', () => {
     context(`Given no bookmarks`, () => {
       it(`responds with 200 and an empty list`, () => {
         return supertest(app)

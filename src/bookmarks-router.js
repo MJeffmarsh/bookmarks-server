@@ -1,4 +1,5 @@
 const express = require('express');
+const xss = require('xss');
 //const uuid = require('uuid/v4');
 const logger = require('./logger');
 const bookmarksService = require('./bookmarksService');
@@ -11,7 +12,7 @@ function serializeBookmark(bookmark) {
     title: xss(bookmark.title), // sanitize title
     url: bookmark.url,
     rating: rating.url,
-    description: xss(description.content) // sanitize content
+    description: xss(bookmark.description) // sanitize content
   };
 }
 
