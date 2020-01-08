@@ -11,7 +11,7 @@ function serializeBookmark(bookmark) {
     id: bookmark.id,
     title: xss(bookmark.title), // sanitize title
     url: bookmark.url,
-    rating: rating.url,
+    rating: bookmark.rating,
     description: xss(bookmark.description) // sanitize content
   };
 }
@@ -28,8 +28,8 @@ bookmarkRouter
       .catch(next);
   })
   .post(jsonParser, (req, res, next) => {
-    const { title, url, description, rating } = req.body;
-    const newBookmark = { title, url, description, rating };
+    const { title, url, rating } = req.body;
+    const newBookmark = { title, url, rating };
 
     for (const [key, value] of Object.entries(newBookmark)) {
       if (value == null) {
@@ -44,29 +44,30 @@ bookmarkRouter
       return res.status(400).send(`'rating' must be a number between 0 and 5`);
     }
 
-    BookmarksService.insertBookmark(req.app.get('db'), newBookmark)
+    bookmarksService
+      .insertBookmark(req.app.get('db'), newBookmark)
       .then(bookmark => {
         res
           .status(201)
           .location(`/bookmarks/${bookmark.id}`)
-          .json(serializebookmark(bookmark));
+          .json(serializeBookmark(bookmark));
       })
       .catch(next);
   });
 
 bookmarkRouter
   .route('/bookmarks/:bookmark_id')
-  .get((req, res, next) => {
-    const knexInstance = req.app.get('db');
+  .all((req, res, next) => {
     bookmarksService
-      .getById(knexInstance, req.params.bookmark_id)
+      .getById(req.app.get('db'), req.params.bookmark_id)
       .then(bookmark => {
         if (!bookmark) {
           return res.status(404).json({
             error: { message: `Bookmark doesn't exist` }
           });
         }
-        res.json(bookmark);
+        res.bookmark = bookmark; // save the bookmark for the next middleware
+        next(); // don't forget to call next so the next middleware happens!
       })
       .catch(next);
   })
@@ -74,7 +75,8 @@ bookmarkRouter
     res.json(serializeBookmark(res.bookmark));
   })
   .delete((req, res, next) => {
-    BookamrksService.deleteBookmark(req.app.get('db'), req.params.bookmark_id)
+    bookmarksService
+      .deleteBookmark(req.app.get('db'), req.params.bookmark_id)
       .then(() => {
         res.status(204).end();
       })

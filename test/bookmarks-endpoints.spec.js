@@ -58,7 +58,7 @@ describe('Bookmarks Endpoints', function() {
         return db.into('bookmarks').insert([maliciousBookmark]);
       });
 
-      it('removes XSS attack content', () => {
+      it('removes XSS attack rating', () => {
         return supertest(app)
           .get(`/bookmarks/${maliciousBookmark.id}`)
           .expect(200)
@@ -90,6 +90,33 @@ describe('Bookmarks Endpoints', function() {
           .expect(200, expectedBookmark);
       });
     });
+    context(`Given an XSS attack bookmark`, () => {
+      const maliciousBookmark = {
+        id: 911,
+        title: 'Naughty naughty very naughty <script>alert("xss");</script>',
+        url: 'http://www.badwebsite.com',
+        rating: '3',
+        description: `Bad image <img src="https://url.to.file.which/does-not.exist" onerror="alert(document.cookie);">. But not <strong>all</strong> bad.`
+      };
+
+      beforeEach('insert malicious bookmark', () => {
+        return db.into('bookmarks').insert([maliciousBookmark]);
+      });
+
+      it('removes XSS attack rating', () => {
+        return supertest(app)
+          .get(`/bookmarks/${maliciousBookmark.id}`)
+          .expect(200)
+          .expect(res => {
+            expect(res.body.title).to.eql(
+              'Naughty naughty very naughty &lt;script&gt;alert("xss");&lt;/script&gt;'
+            );
+            expect(res.body.description).to.eql(
+              `Bad image <img src="https://url.to.file.which/does-not.exist">. But not <strong>all</strong> bad.`
+            );
+          });
+      });
+    });
   });
   describe(`GET /bookmarks/:bookmark_id`, () => {
     context(`Given no bookmarks`, () => {
@@ -98,6 +125,55 @@ describe('Bookmarks Endpoints', function() {
         return supertest(app)
           .get(`/bookmarks/${bookmarkId}`)
           .expect(404, { error: { message: `Bookmark doesn't exist` } });
+      });
+    });
+  });
+  describe.only(`POST /bookmarks`, () => {
+    it(`creates a bookmark, responding with 201 and the new bookmark`, function() {
+      this.retries(3);
+      const newBookmark = {
+        title: 'Test new bookmark',
+        url: 'https://testsite.com',
+        rating: '3',
+        description: 'test bookmark description'
+      };
+      return supertest(app)
+        .post('/bookmarks')
+        .send(newBookmark)
+        .expect(201)
+        .expect(res => {
+          expect(res.body.title).to.eql(newBookmark.title);
+          expect(res.body.url).to.eql(newBookmark.url);
+          expect(res.body.rating).to.eql(newBookmark.rating);
+          expect(res.body.description).to.eql(newBookmark.description);
+          expect(res.body).to.have.property('id');
+          expect(res.headers.location).to.eql(`/bookmarks/${res.body.id}`);
+          expect(actual).to.eql(expected);
+        })
+        .then(postRes =>
+          supertest(app)
+            .get(`/bookmarks/${postRes.body.id}`)
+            .expect(postRes.body)
+        );
+    });
+
+    const requiredFields = ['title', 'url', 'rating'];
+    requiredFields.forEach(field => {
+      const newBookmark = {
+        title: 'Test new Bookmark',
+        url: 'https://testbookmark.com',
+        rating: '3'
+      };
+
+      it(`responds with 400 and an error message when the '${field}' is missing`, () => {
+        delete newBookmark[field];
+
+        return supertest(app)
+          .post('/bookmarks')
+          .send(newBookmark)
+          .expect(400, {
+            error: { message: `Missing '${field}' in request body` }
+          });
       });
     });
   });

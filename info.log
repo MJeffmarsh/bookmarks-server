@@ -10,3 +10,15 @@
 {"message":"Bookmark with id 384fcf50-2471-4e9c-a10e-e754a834b226 deleted","level":"info"}
 {"message":"Bookmark with id 384fcf50-2471-4e9c-a10e-e754a834b226 not found.","level":"error"}
 {"message":"Bookmark with id 123456 not found.","level":"error"}
+{"message":"Invalid rating '2' supplied","level":"error"}
+{"message":"Invalid rating '2' supplied","level":"error"}
+{"message":"Invalid rating '2' supplied","level":"error"}
+{"message":"Invalid rating '2' supplied","level":"error"}
+{"message":"Invalid rating '3' supplied","level":"error"}
+{"message":"Invalid rating '3' supplied","level":"error"}
+{"message":"Invalid rating '3' supplied","level":"error"}
+{"message":"Invalid rating '3' supplied","level":"error"}
+{"message":"Invalid rating '3' supplied","level":"error"}
+{"message":"Invalid rating '3' supplied","level":"error"}
+{"message":"Invalid rating '3' supplied","level":"error"}
+{"message":"Invalid rating '3' supplied","level":"error"}
