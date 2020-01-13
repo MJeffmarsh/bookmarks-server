@@ -32,6 +32,12 @@ bookmarkRouter
     const { title, url, rating, description } = req.body;
     const newBookmark = { title, url, rating, description };
 
+    // +newBookmark.rating
+    // 0+"1" -> 1
+    // Number("0.87")
+    // parseFloat("0.87") -> 0.87
+    // parseInt("1.25") -> 1
+
     for (const [key, value] of Object.entries(newBookmark)) {
       if (value == null) {
         return res.status(400).json({
@@ -39,6 +45,8 @@ bookmarkRouter
         });
       }
     }
+
+    console.log(rating, typeof rating);
 
     if (!['1', '2', '3', '4', '5'].includes(rating)) {
       logger.error(`Invalid rating '${rating}' supplied`);
